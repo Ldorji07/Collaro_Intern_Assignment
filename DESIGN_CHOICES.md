@@ -102,11 +102,26 @@ Migration strategy:
 - Add advanced features (undo, bulk edit)
 - Clean up old state
 
-## Lessons Learned
+---
 
-- Start simple—local state is perfect for quick iteration
-- Lazy loading is your friend—don't load data until you need it
-- Isolated state is easier to debug
-- Optimistic updates make the UI feel fast
+## Q&A
 
-The current setup works well for a focused dashboard. It's maintainable, performs well, and was quick to build.
+### 1. How did you manage the application's state, particularly the complex state for the main table (filters, sorting) and the individual row states (expanded, loading, editing)?
+
+I used local React state via `useState` for all aspects of the dashboard. The main table's state (filters, sorting, pagination, loading, error) is managed at the top level of `CustomerDashboard.jsx`. Each row's expanded/collapsed state, loading/error for orders, and editing states for customer status and order item sizes are tracked in separate state objects (`expandedRows`, `editingCustomer`, `editingOrderItem`). This keeps state isolated and easy to reason about, with updates handled via callbacks and optimistic UI updates.
+
+### 2. Explain your API design. Why did you choose to separate the customer and order endpoints? What are the benefits of this approach?
+
+The API is split into two endpoints:
+- `GET /api/customers`: Returns paginated, filtered, and sorted customer data without nested orders.
+- `GET /api/customers/:id/orders`: Returns detailed order data for a specific customer.
+
+This separation allows the frontend to load only essential customer data initially, keeping the dashboard fast and responsive. Order details are fetched only when a row is expanded, reducing unnecessary data transfer and memory usage. It also makes backend logic simpler and endpoints easier to cache and optimize independently.
+
+### 3. Describe the biggest technical challenge you faced while implementing the nested inline editing feature and how you solved it.
+
+The hardest part was managing editing state for nested order items inside expanded rows, while also supporting customer status editing at the table level. I solved this by keeping editing state for each feature separate (`editingCustomer` for status, `editingOrderItem` for sizes) and updating local state optimistically. Each editor is isolated, so editing one item doesn't affect others. Cancel actions restore original values, and updates are reflected immediately in the UI.
+
+### 4. If you had another day, what single feature or refactor would you prioritize and why?
+
+I would refactor state management to use React Context and a reducer (like `useReducer` or Redux). This would centralize state updates, make debugging easier, and support advanced features like undo/redo or bulk editing. It would also improve maintainability and scalability for future development.
